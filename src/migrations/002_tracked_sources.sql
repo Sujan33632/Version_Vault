@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS tracked_sources (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  doc_id TEXT NOT NULL,
+  type TEXT NOT NULL,
+  config TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);

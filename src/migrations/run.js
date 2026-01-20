@@ -13,3 +13,10 @@ db.exec(sql, (err) => {
     console.log("Database initialized successfully");
   }
 });
+
+const sql2 = fs.readFileSync(
+  path.join(__dirname, "002_tracked_sources.sql"),
+  "utf8"
+);
+
+db.exec(sql2);

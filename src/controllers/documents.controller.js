@@ -5,11 +5,17 @@ exports.createOrUpdate = async (req, res) => {
     const result = await versionManager.commit(
       req.params.id,
       req.body,
-      req.query.baseVersion || null
+      (req.query && req.query.baseVersion) || null
     );
     res.status(201).json(result);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error(err);
+
+    if (res && typeof res.status === "function") {
+      return res.status(400).json({ error: err.message });
+    }
+
+    throw err;
   }
 };
 
