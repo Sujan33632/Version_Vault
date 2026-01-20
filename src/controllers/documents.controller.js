@@ -2,93 +2,62 @@ const versionManager = require("../services/versionManager.service");
 
 exports.createOrUpdate = async (req, res) => {
   try {
-    const commit = await versionManager.commit(
+    const result = await versionManager.commit(
       req.params.id,
-      req.body
+      req.body,
+      req.query.baseVersion || null
     );
-    res.status(201).json(commit);
+    res.status(201).json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 };
 
 exports.getDocument = async (req, res) => {
-  try {
-    const doc = await versionManager.read({
-      docId: req.params.id,
-      commitId: req.query.commit,
-      at: req.query.at
-    });
+  const doc = await versionManager.read({
+    docId: req.params.id,
+    version: req.query.version,
+    commitId: req.query.commit,
+    at: req.query.at
+  });
 
-    if (!doc) {
-      return res.status(404).json({ error: "Not found" });
-    }
-
-    res.json(doc);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  doc
+    ? res.json(doc)
+    : res.status(404).json({ error: "Not found" });
 };
 
 exports.getHistory = async (req, res) => {
-  try {
-    const history = await versionManager.history(req.params.id);
-    res.json(history);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  res.json(await versionManager.history(req.params.id));
 };
 
 exports.diffDocument = async (req, res) => {
-  try {
-    const { from, to } = req.query;
-    const docId = req.params.id;
+  const { from, to } = req.query;
 
-    if (!from || !to) {
-      return res.status(400).json({
-        error: "Both 'from' and 'to' commit IDs are required"
-      });
-    }
-
-    const diff = await versionManager.diff({
-      docId,
-      from,
-      to
+  if (!from || !to) {
+    return res.status(400).json({
+      error: "Both 'from' and 'to' are required"
     });
-
-    if (!diff) {
-      return res.status(404).json({ error: "Commit(s) not found" });
-    }
-
-    res.json(diff);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
+
+  const diff = await versionManager.diff({
+    docId: req.params.id,
+    from,
+    to
+  });
+
+  diff
+    ? res.json(diff)
+    : res.status(404).json({ error: "Invalid versions or commits" });
 };
 
-exports.diffDocument = async (req, res) => {
+exports.deleteVersion = async (req, res) => {
   try {
-    const { from, to } = req.query;
-    const docId = req.params.id;
-
-    if (!from || !to) {
-      return res.status(400).json({
-        error: "Both 'from' and 'to' commit IDs are required"
-      });
-    }
-
-    const diff = await versionManager.diff({
-      docId,
-      from,
-      to
-    });
-
-    if (!diff) {
-      return res.status(404).json({ error: "Commit(s) not found" });
-    }
-
-    res.json(diff);
+    const result = await versionManager.deleteVersion(
+      req.params.id,
+      req.params.version
+    );
+    res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 };

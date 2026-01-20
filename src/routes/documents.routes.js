@@ -1,14 +1,14 @@
 const express = require("express");
-const controller = require("../controllers/documents.controller");
+const c = require("../controllers/documents.controller");
+const r = express.Router();
 
-const router = express.Router();
+r.post("/:id", c.createOrUpdate);
+r.get("/:id/history", c.getHistory);
+r.get("/:id/diff", c.diffDocument);
 
-// Write
-router.post("/:id", controller.createOrUpdate);
+// 🔥 NEW DELETE ROUTE
+r.delete("/:id/version/:version", c.deleteVersion);
 
-// Reads (specific first)
-router.get("/:id/history", controller.getHistory);
-router.get("/:id/diff", controller.diffDocument);
-router.get("/:id", controller.getDocument);
+r.get("/:id", c.getDocument);
 
-module.exports = router;
+module.exports = r;

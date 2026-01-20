@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS documents (
-  doc_id TEXT PRIMARY KEY,
-  created_at TEXT NOT NULL
+  doc_id TEXT PRIMARY KEY
 );
 
 CREATE TABLE IF NOT EXISTS commits (
@@ -10,4 +9,11 @@ CREATE TABLE IF NOT EXISTS commits (
   timestamp TEXT NOT NULL,
   branch TEXT NOT NULL,
   data TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS versions (
+  doc_id TEXT NOT NULL,
+  version_name TEXT NOT NULL,
+  commit_id TEXT NOT NULL,
+  PRIMARY KEY (doc_id, version_name)
 );
