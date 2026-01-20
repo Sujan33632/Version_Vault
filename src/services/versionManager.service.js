@@ -2,6 +2,7 @@ const documentsRepo = require("../repositories/documents.repo");
 const commitsRepo = require("../repositories/commits.repo");
 const { uuid } = require("../utils/idGenerator");
 const { now } = require("../utils/time");
+const { diffObjects } = require("../utils/diff");
 
 exports.commit = async (docId, data) => {
   const exists = await documentsRepo.exists(docId);
@@ -41,4 +42,18 @@ exports.read = async ({ docId, commitId, at }) => {
 
 exports.history = async (docId) => {
   return commitsRepo.history(docId);
+};
+
+exports.diff = async ({ docId, from, to }) => {
+  const fromCommit = await commitsRepo.byCommitId(docId, from);
+  const toCommit = await commitsRepo.byCommitId(docId, to);
+
+  if (!fromCommit || !toCommit) {
+    return null;
+  }
+
+  const fromData = JSON.parse(fromCommit.data);
+  const toData = JSON.parse(toCommit.data);
+
+  return diffObjects(fromData, toData);
 };
