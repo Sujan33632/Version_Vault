@@ -179,3 +179,25 @@ exports.deleteVersion = async (docId, version) => {
     message: "Version deleted successfully"
   };
 };
+
+exports.historyAll = async (atVersion) => {
+  const commits = await commitsRepo.allLatest();
+
+  if (!atVersion) return commits;
+
+  const filtered = [];
+  const seen = new Set();
+
+  for (const commit of commits) {
+    if (seen.has(commit.doc_id)) continue;
+    seen.add(commit.doc_id);
+
+    const resolved = await exports.read({
+      docId: commit.doc_id,
+      version: atVersion
+    });
+    if (resolved) filtered.push(resolved);
+  }
+
+  return filtered;
+};

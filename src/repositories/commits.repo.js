@@ -67,3 +67,16 @@ exports.history = (docId) => {
     );
   });
 };
+
+exports.allLatest = () => {
+  return new Promise((resolve) => {
+    db.all(
+      `
+      SELECT c.*
+      FROM commits c
+      JOIN versions v ON c.commit_id = v.commit_id
+      `,
+      (_, rows) => resolve(rows)
+    );
+  });
+};
