@@ -1,9 +1,15 @@
 const express = require("express");
-const controller = require("../controllers/query.controller");
-
 const router = express.Router();
+const queryEngine = require("../query/queryEngine");
 
-// Conditional SELECT queries
-router.post("/", controller.runQuery);
+router.post("/", async (req, res) => {
+  try {
+    const result = await queryEngine.execute(req.body);
+    res.json(result); // ← THIS must be result, not wrapped
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: err.message });
+  }
+});
 
 module.exports = router;

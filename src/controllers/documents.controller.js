@@ -27,13 +27,38 @@ exports.getDocument = async (req, res) => {
     at: req.query.at
   });
 
-  doc
-    ? res.json(doc)
-    : res.status(404).json({ error: "Not found" });
+  if (doc) {
+    const normalize = (d) => {
+      while (typeof d === "string") {
+        d = JSON.parse(d);
+      }
+      return d;
+    };
+
+    res.json({
+      ...doc,
+      data: normalize(doc.data)
+    });
+  } else {
+    res.status(404).json({ error: "Not found" });
+  }
 };
 
 exports.getHistory = async (req, res) => {
-  res.json(await versionManager.history(req.params.id));
+  const history = await versionManager.history(req.params.id);
+  const normalize = (d) => {
+    while (typeof d === "string") {
+      d = JSON.parse(d);
+    }
+    return d;
+  };
+
+  res.json(
+    history.map(c => ({
+      ...c,
+      data: normalize(c.data)
+    }))
+  );
 };
 
 exports.diffDocument = async (req, res) => {

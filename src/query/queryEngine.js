@@ -1,49 +1,46 @@
 const versionManager = require("../services/versionManager.service");
 
-// Supported operators
-const operators = {
-  "$eq": (a, b) => a === b,
-  "$gt": (a, b) => a > b,
-  "$lt": (a, b) => a < b,
-  "$gte": (a, b) => a >= b,
-  "$lte": (a, b) => a <= b
-};
+function normalize(data) {
+  let d = data;
+  while (typeof d === "string") {
+    d = JSON.parse(d);
+  }
+  return d;
+}
 
-const matchesCondition = (data, where) => {
-  for (const field in where) {
-    const condition = where[field];
+function matchWhere(row, where) {
+  for (const key in where) {
+    const cond = where[key];
 
-    if (typeof condition === "object") {
-      for (const op in condition) {
-        if (!operators[op]) return false;
-        if (!operators[op](data[field], condition[op])) {
-          return false;
-        }
-      }
+    if (typeof cond === "object") {
+      if ("$gt" in cond && !(row[key] > cond.$gt)) return false;
+      if ("$lt" in cond && !(row[key] < cond.$lt)) return false;
+      if ("$eq" in cond && row[key] !== cond.$eq) return false;
     } else {
-      if (data[field] !== condition) return false;
+      if (row[key] !== cond) return false;
     }
   }
   return true;
-};
+}
 
-exports.runQuery = async ({ where = {}, at }) => {
-  // Load ALL documents at a version
-  // (simple MVP – scalable later)
-  const documents = await versionManager.historyAll(at);
+exports.execute = async ({ from, at, where }) => {
+  const doc = await versionManager.read({
+    docId: from,
+    version: at
+  });
 
-  const results = [];
+  if (!doc) return [];
 
-  for (const doc of documents) {
-    const data = JSON.parse(doc.data);
-    if (matchesCondition(data, where)) {
-      results.push({
-        doc_id: doc.doc_id,
-        version: doc.branch,
-        data
-      });
-    }
+  const payload = normalize(doc.data);
+
+  // 🔒 IMPORTANT: only snapshot documents are queryable
+  if (!payload || !Array.isArray(payload.rows)) {
+    return [];
   }
 
-  return results;
+  if (!where || Object.keys(where).length === 0) {
+    return payload.rows;
+  }
+
+  return payload.rows.filter(row => matchWhere(row, where));
 };
